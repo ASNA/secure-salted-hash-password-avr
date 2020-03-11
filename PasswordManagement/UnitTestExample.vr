@@ -1,0 +1,63 @@
+﻿Using System
+Using System.Text
+// Add reference to Microsoft.VisualStudio.QualityTools.UnitTestFramework
+using Microsoft.VisualStudio.TestTools.UnitTesting
+using System.Security.Cryptography
+
+DclNamespace PasswordManagement
+
+BegClass UnitTestExample Access(*Public) Attributes(TestClass())
+
+    BegSr TestCreateAndAuthenticate Access(*Public) Attributes(TestMethod()) 
+        DclFld strongPassword Type(*String)  Inz("1V{QZsbvE/;moo")
+        DclFld hashedPassword Type(*String)             
+        DclFld ok Type(*Boolean) 
+
+        hashedPassword = Helpers.PasswordManagement.CreateSaltedHash(strongPassword) 
+        Assert.IsNotNull(hashedPassword) 
+
+        ok = Helpers.PasswordManagement.AuthenticateUserPassword(strongPassword, hashedPassword) 
+        Assert.IsTrue(ok)         
+    EndSr
+
+    BegSr TestPasswordLengthsZeroTo1024 Access(*Public) Attributes(TestMethod()) 
+        DclConst MAX_PASSWORD_LENGTH Value(1024)
+
+        DclFld i Type(*Integer4) 
+        DclFld password Type(*String) 
+        DclFld hashedPassword Type(*String) 
+
+        For  Index(i = 0) To(MAX_PASSWORD_LENGTH - 1) 
+            // Generate a password of i length.
+            password = Helpers.PasswordManagement.GetRandomPassword(i)
+            // Get its hash (even an empty string has a hash!).
+            hashedPassword = Helpers.PasswordManagement.CreateSaltedHash(password)
+
+            Assert.AreEqual(hashedPassword.Length, Helpers.PasswordManagement.EXPECTED_SALTED_HASH_LENGTH *As *Integer4)
+
+            // The hash should authenticate. 
+            Assert.IsTrue(Helpers.PasswordManagement.AuthenticateUserPassword(password, hashedPassword))
+        EndFor
+    EndSr 
+
+    BegSr TestRandomPasswords Access(*Public) Attributes(TestMethod()) 
+        DclConst TIMES_TO_TEST Value(500)
+        DclConst PASSWORD_LENGTH Value(32)
+
+        DclFld i Type(*Integer4) 
+        DclFld password Type(*String) 
+        DclFld hashedPassword Type(*String) 
+
+        For  Index(i = 0) To(TIMES_TO_TEST - 1) 
+            password = Helpers.PasswordManagement.GetRandomPassword(PASSWORD_LENGTH)
+            hashedPassword = Helpers.PasswordManagement.CreateSaltedHash(password)
+
+            Assert.AreEqual(hashedPassword.Length, Helpers.PasswordManagement.EXPECTED_SALTED_HASH_LENGTH *As *Integer4)
+
+            // The hash should authenticate. 
+            Assert.IsTrue(Helpers.PasswordManagement.AuthenticateUserPassword(password, hashedPassword))           
+        EndFor 
+    EndSr 
+
+
+EndClass
